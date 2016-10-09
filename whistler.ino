@@ -14,20 +14,27 @@ int led1 = D3; // Red LED
 
 int led2 = D7; // Built in Blue LED
 
+int led3 = D1;
+
 int mic = A4; // Microphone
 
 int activeNoiseLevel; // Store latest loudness level
 
 int triggerNoiseLvl; // Level at which we send the trigger.
 
+int loopIteration;
+
 
 void setup() {
 
   pinMode(led1, OUTPUT);
   pinMode(led2, OUTPUT);
+  pinMode(led3, OUTPUT);
   pinMode(mic, INPUT);
 
   Serial.begin(9600);
+
+  loopIteration = 0;
 
 
 
@@ -45,18 +52,31 @@ void setup() {
 // Note: Code that blocks for too long (like more than 5 seconds), can make weird things happen (like dropping the network connection).  The built-in delay function shown below safely interleaves required background activity, so arbitrarily long delays can safely be done if you need them.
 
 void loop() {
-  digitalWrite(led2,HIGH);
+  char soundLine[32]; /* At least big enough for 31 chars + null. */
+  char liLine[32];
+
+  digitalWrite(led3,HIGH);
   delay(1000);
-  digitalWrite(led2,LOW);
+  digitalWrite(led3,LOW);
   delay(1000);
 
 
   activeNoiseLevel = analogRead(mic);
   analogWrite(led1, activeNoiseLevel/16);
 
-  char line[32]; /* At least big enough for 31 chars + null. */
-  sprintf(line, "Vol - %d; Pin - %d\n", activeNoiseLevel, activeNoiseLevel/16);
-  Serial.print(line);
+  sprintf(soundLine, "Vol - %d; Pin - %d\n", activeNoiseLevel, activeNoiseLevel/16);
+  Serial.print(soundLine);
+
+  if (activeNoiseLevel > 1700 && loopIteration > 10) {
+    loopIteration = 0;
+    whistleCB("whistle");
+    Serial.println("Sound Threshold Reached");
+  }
+
+  loopIteration = loopIteration + 1;
+
+  sprintf(liLine, "LI - %d\n", loopIteration);
+  Serial.print(liLine);
 
   delay(10);
 
@@ -70,9 +90,9 @@ int whistleCB(String command)
     {
 	  	Particle.publish("soundDetected", "calm-hobbit", PRIVATE);
 			//blinkLed();
-      digitalWrite(led1,HIGH);
+      digitalWrite(led2,HIGH);
     	delay(5000);
-    	digitalWrite(led1,LOW);
+    	digitalWrite(led2,LOW);
       return 1;
     }
   else return -1;
