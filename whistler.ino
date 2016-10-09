@@ -67,7 +67,7 @@ void loop() {
   sprintf(soundLine, "Vol - %d; Pin - %d\n", activeNoiseLevel, activeNoiseLevel/16);
   Serial.print(soundLine);
 
-  if (activeNoiseLevel > 1700 && loopIteration > 10) {
+  if (activeNoiseLevel > 2000 && loopIteration > 10) {
     loopIteration = 0;
     whistleCB("whistle");
     Serial.println("Sound Threshold Reached");
